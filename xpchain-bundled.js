@@ -485,11 +485,12 @@ let NETWORK_TYPE = typeforce.compile({
   }
 })
 
-let BITCOIN = {
+//todo: bit32(HD Wallet) is disabled currently
+let XPCHAIN = {
   wif: 0x80,
   bip32: {
-    public: 0x0488b21e,
-    private: 0x0488ade4
+    public: 0x00000000,
+    private: 0x00000000
   }
 }
 
@@ -683,7 +684,7 @@ BIP32.prototype.verify = function (hash, signature) {
 function fromBase58 (string, network) {
   let buffer = bs58check.decode(string)
   if (buffer.length !== 78) throw new TypeError('Invalid buffer length')
-  network = network || BITCOIN
+  network = network || XPCHAIN
 
   // 4 bytes: version bytes
   let version = buffer.readUInt32BE(0)
@@ -733,7 +734,7 @@ function fromPrivateKey (privateKey, chainCode, network) {
     privateKey: UINT256_TYPE,
     chainCode: UINT256_TYPE
   }, { privateKey, chainCode })
-  network = network || BITCOIN
+  network = network || XPCHAIN
 
   if (!ecc.isPrivate(privateKey)) throw new TypeError('Private key not in range [1, n)')
   return new BIP32(privateKey, null, chainCode, network)
@@ -744,7 +745,7 @@ function fromPublicKey (publicKey, chainCode, network) {
     publicKey: typeforce.BufferN(33),
     chainCode: UINT256_TYPE
   }, { publicKey, chainCode })
-  network = network || BITCOIN
+  network = network || XPCHAIN
 
   // verify the X coordinate is a point on the curve
   if (!ecc.isPoint(publicKey)) throw new TypeError('Point is not on the curve')
@@ -755,7 +756,7 @@ function fromSeed (seed, network) {
   typeforce(typeforce.Buffer, seed)
   if (seed.length < 16) throw new TypeError('Seed should be at least 128 bits')
   if (seed.length > 64) throw new TypeError('Seed should be at most 512 bits')
-  network = network || BITCOIN
+  network = network || XPCHAIN
 
   let I = crypto.hmacSHA512('Bitcoin seed', seed)
   let IL = I.slice(0, 32)
@@ -1084,7 +1085,7 @@ function toBech32 (data, version, prefix) {
 }
 
 function fromOutputScript (output, network) {
-  network = network || networks.bitcoin
+  network = network || networks.xpchain
 
   try { return payments.p2pkh({ output, network }).address } catch (e) {}
   try { return payments.p2sh({ output, network }).address } catch (e) {}
@@ -1095,7 +1096,7 @@ function fromOutputScript (output, network) {
 }
 
 function toOutputScript (address, network) {
-  network = network || networks.bitcoin
+  network = network || networks.xpchain
 
   let decode
   try {
@@ -1461,7 +1462,7 @@ function ECPair (d, Q, options) {
   options = options || {}
 
   this.compressed = options.compressed === undefined ? true : options.compressed
-  this.network = options.network || NETWORKS.bitcoin
+  this.network = options.network || NETWORKS.xpchain
 
   this.__d = d || null
   this.__Q = null
@@ -1518,9 +1519,9 @@ function fromWIF (string, network) {
 
     if (!network) throw new Error('Unknown network version')
 
-  // otherwise, assume a network object (or default to bitcoin)
+  // otherwise, assume a network object (or default to xpchain)
   } else {
-    network = network || NETWORKS.bitcoin
+    network = network || NETWORKS.xpchain
 
     if (version !== network.wif) throw new Error('Invalid network version')
   }
@@ -1574,27 +1575,28 @@ module.exports = {
 // https://en.bitcoin.it/wiki/List_of_address_prefixes
 // Dogecoin BIP32 is a proposed standard: https://bitcointalk.org/index.php?topic=409731
 
+//todo: bip32(HD wallet) currently disabled 
 module.exports = {
-  bitcoin: {
-    messagePrefix: '\x18Bitcoin Signed Message:\n',
-    bech32: 'bc',
+  xpchain: {
+    messagePrefix: '\x18XPChain Signed Message:\n',
+    bech32: 'xpc',
     bip32: {
-      public: 0x0488b21e,
-      private: 0x0488ade4
+      public: 0x00000000,
+      private: 0x00000000
     },
     pubKeyHash: 0x00,
     scriptHash: 0x05,
     wif: 0x80
   },
   testnet: {
-    messagePrefix: '\x18Bitcoin Signed Message:\n',
-    bech32: 'tb',
+    messagePrefix: '\x18XPChain Signed Message:\n',
+    bech32: 'txpc',
     bip32: {
-      public: 0x043587cf,
-      private: 0x04358394
+      public: 0x00000000,
+      private: 0x00000000
     },
-    pubKeyHash: 0x6f,
-    scriptHash: 0xc4,
+    pubKeyHash: 0x8a,
+    scriptHash: 0x3a,
     wif: 0xef
   }
 }
@@ -1605,7 +1607,7 @@ const typef = require('typeforce')
 const OPS = require('bitcoin-ops')
 
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 
 function stacksEqual (a, b) {
   if (a.length !== b.length) return false
@@ -1629,7 +1631,7 @@ function p2data (a, opts) {
     data: typef.maybe(typef.arrayOf(typef.Buffer))
   }, a)
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   lazy.prop(o, 'output', function () {
@@ -1710,7 +1712,7 @@ const OPS = require('bitcoin-ops')
 const ecc = require('tiny-secp256k1')
 
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 const OP_INT_BASE = OPS.OP_RESERVED // OP_1 - 1
 
 function stacksEqual (a, b) {
@@ -1747,7 +1749,7 @@ function p2ms (a, opts) {
     input: typef.maybe(typef.Buffer)
   }, a)
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   let chunks
@@ -1852,7 +1854,7 @@ const OPS = require('bitcoin-ops')
 const ecc = require('tiny-secp256k1')
 
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 
 // input: {signature}
 // output: {pubKey} OP_CHECKSIG
@@ -1877,7 +1879,7 @@ function p2pk (a, opts) {
 
   const _chunks = lazy.value(function () { return bscript.decompile(a.input) })
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   lazy.prop(o, 'output', function () {
@@ -1936,7 +1938,7 @@ const ecc = require('tiny-secp256k1')
 
 const bcrypto = require('../crypto')
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 const bs58check = require('bs58check')
 
 // input: {signature} {pubkey}
@@ -1970,7 +1972,7 @@ function p2pkh (a, opts) {
   })
   const _chunks = lazy.value(function () { return bscript.decompile(a.input) })
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   lazy.prop(o, 'address', function () {
@@ -2076,7 +2078,7 @@ const OPS = require('bitcoin-ops')
 
 const bcrypto = require('../crypto')
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 const bs58check = require('bs58check')
 
 function stacksEqual (a, b) {
@@ -2117,7 +2119,7 @@ function p2sh (a, opts) {
     witness: typef.maybe(typef.arrayOf(typef.Buffer))
   }, a)
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   const _address = lazy.value(function () {
@@ -2271,7 +2273,7 @@ const ecc = require('tiny-secp256k1')
 const bcrypto = require('../crypto')
 const bech32 = require('bech32')
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 
 const EMPTY_BUFFER = Buffer.alloc(0)
 
@@ -2310,7 +2312,7 @@ function p2wpkh (a, opts) {
     }
   })
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   lazy.prop(o, 'address', function () {
@@ -2409,7 +2411,7 @@ const OPS = require('bitcoin-ops')
 const bech32 = require('bech32')
 const bcrypto = require('../crypto')
 const bscript = require('../script')
-const BITCOIN_NETWORK = require('../networks').bitcoin
+const XPCHAIN_NETWORK = require('../networks').xpchain
 
 const EMPTY_BUFFER = Buffer.alloc(0)
 
@@ -2463,7 +2465,7 @@ function p2wsh (a, opts) {
   })
   const _rchunks = lazy.value(function () { return bscript.decompile(a.redeem.input) })
 
-  const network = a.network || BITCOIN_NETWORK
+  const network = a.network || XPCHAIN_NETWORK
   const o = { network }
 
   lazy.prop(o, 'address', function () {
@@ -4223,7 +4225,7 @@ function build (type, input, allowIncomplete) {
 
 function TransactionBuilder (network, maximumFeeRate) {
   this.__prevTxSet = {}
-  this.network = network || networks.bitcoin
+  this.network = network || networks.xpchain
 
   // WARNING: This is __NOT__ to be relied on, its just another potential safety mechanism (safety in-depth)
   this.maximumFeeRate = maximumFeeRate || 2500
@@ -21825,7 +21827,12 @@ module.exports = {
 
 }).call(this,require("buffer").Buffer)
 },{"bs58check":58,"buffer":59}],144:[function(require,module,exports){
-const bitcoin = require('bitcoinjs-lib');
-
-
-},{"bitcoinjs-lib":15}]},{},[144]);
+const xpchain = require('xpchain-lib');
+const buffer = require('safe-buffer').Buffer;
+//export
+if (window){
+  window.XPChain = xpchain;
+  window.XPChain.lib = {};
+  window.XPChain.lib.Buffer = buffer;
+}
+},{"xpchain-lib":15,"safe-buffer":123}]},{},[144]);
