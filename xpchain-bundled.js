@@ -485,12 +485,11 @@ let NETWORK_TYPE = typeforce.compile({
   }
 })
 
-//todo: bit32(HD Wallet) is disabled currently
 let XPCHAIN = {
   wif: 0x80,
   bip32: {
-    public: 0x00000000,
-    private: 0x00000000
+    public: 0x0488B21E,
+    private: 0x0488ADE4
   }
 }
 
@@ -1575,28 +1574,27 @@ module.exports = {
 // https://en.bitcoin.it/wiki/List_of_address_prefixes
 // Dogecoin BIP32 is a proposed standard: https://bitcointalk.org/index.php?topic=409731
 
-//todo: bip32(HD wallet) currently disabled 
 module.exports = {
   xpchain: {
     messagePrefix: '\x18XPChain Signed Message:\n',
     bech32: 'xpc',
     bip32: {
-      public: 0x00000000,
-      private: 0x00000000
+      public: 0x0488B21E,
+      private: 0x0488ADE4
     },
-    pubKeyHash: 0x00,
-    scriptHash: 0x05,
+    pubKeyHash: 0x4c,
+    scriptHash: 0x1c,
     wif: 0x80
   },
   testnet: {
     messagePrefix: '\x18XPChain Signed Message:\n',
     bech32: 'txpc',
     bip32: {
-      public: 0x00000000,
-      private: 0x00000000
+      public: 0x043587CF,
+      private: 0x04358394
     },
     pubKeyHash: 0x8a,
-    scriptHash: 0x3a,
+    scriptHash: 0x58,
     wif: 0xef
   }
 }
